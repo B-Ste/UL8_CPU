@@ -15,6 +15,7 @@ parameter PERIOD  = 10;
 reg   [7:0]  x_in                          = 0 ;
 reg   [7:0]  y_in                          = 0 ;
 reg   [1:0]  op_in                         = 0 ;
+reg          rst_n                         = 1 ;
 
 // alu Outputs
 wire  [7:0]  z_out                         ;    
@@ -31,6 +32,7 @@ alu  u_alu (
     .x_in                    ( x_in   [7:0] ),
     .y_in                    ( y_in   [7:0] ),
     .op_in                   ( op_in  [1:0] ),
+    .rst_n                   ( rst_n        ),   
 
     .z_out                   ( z_out  [7:0] )
 );
@@ -54,6 +56,11 @@ begin
     `assert(z_out, 8'b11011111);
 
     op_in <= 2'b11;
+    #1;
+    `assert(z_out, 8'b0);
+
+    op_in <= 2'b00;
+    rst_n <= 0;
     #1;
     `assert(z_out, 8'b0);
 
