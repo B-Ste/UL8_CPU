@@ -22,6 +22,7 @@ reg   [7:0]  in_4                          = 0 ;
 reg   [7:0]  in_5                          = 0 ;
 reg   [7:0]  in_6                          = 0 ;
 reg   [7:0]  in_7                          = 0 ;
+reg          rst_n                         = 1 ;
 
 // bus_mux Outputs
 wire  [7:0]  out                           ;    
@@ -44,6 +45,7 @@ bus_mux  u_bus_mux (
     .in_5                    ( in_5  [7:0] ),
     .in_6                    ( in_6  [7:0] ),
     .in_7                    ( in_7  [7:0] ),
+    .rst_n                   ( rst_n       ),
 
     .out                     ( out   [7:0] )
 );
@@ -82,6 +84,9 @@ begin
 
     sel <= 3'b111;
     #1 `assert(out, 8'b10000000);
+
+    rst_n <= 0;
+    #1 `assert(out, 8'b00000000);
 
     $finish;
 end
