@@ -18,10 +18,11 @@ module alu (
     input [7:0] y_in,
     input [1:0] op_in,
     input rst_n,
+    input clk,
     output reg [7:0] z_out
 );
 
-always @(x_in, y_in, op_in or negedge rst_n) begin
+always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         z_out <= 8'b0;
     end else begin
