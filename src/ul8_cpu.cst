@@ -5,7 +5,21 @@
 //Part Number: GW1NR-LV9QN88PC6/I5
 //Device: GW1NR-9
 //Device Version: C
-//Created Time: Tue 08 27 15:09:02 2024
+//Created Time: Fri 09 13 21:11:48 2024
 
 IO_LOC "clk" 52;
 IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=1.8;
+IO_LOC "resetn" 3;
+IO_PORT "resetn" IO_TYPE=LVCMOS18 PULL_MODE=UP BANK_VCCIO=1.8;
+IO_LOC "startn" 4;
+IO_PORT "startn" IO_TYPE=LVCMOS18 PULL_MODE=UP BANK_VCCIO=1.8;
+IO_LOC "lcd_data" 77;
+IO_PORT "lcd_data" PULL_MODE=UP DRIVE=8;
+IO_LOC "lcd_rs" 49;
+IO_PORT "lcd_rs" PULL_MODE=UP DRIVE=8;
+IO_LOC "lcd_cs" 48;
+IO_PORT "lcd_cs" PULL_MODE=UP DRIVE=8;
+IO_LOC "lcd_clk" 76;
+IO_PORT "lcd_clk" PULL_MODE=UP DRIVE=8;
+IO_LOC "lcd_resetn" 47;
+IO_PORT "lcd_resetn" PULL_MODE=UP DRIVE=8;
