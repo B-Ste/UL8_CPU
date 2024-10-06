@@ -2,10 +2,12 @@
 #include<string.h>
 
 #ifdef DEBUG
-#define DEBUG_PRINT(...) printf(__VA_ARGS__)
+    #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else
-#define DEBUG_PRINT(...)
+    #define DEBUG_PRINT(...)
 #endif
+
+#define LINE_LENGTH 256
 
 typedef struct Inst {
     struct Inst *next;
@@ -49,10 +51,21 @@ int main(int argc, char const *argv[])
 
     // Reads lines from file. Limited to 256 chars per line.
     // TODO: Make length of lines irrelevant
-    char line[256];
+    char line[LINE_LENGTH];
 
-    while (fgets(line, 256, file) != NULL) {
-        DEBUG_PRINT("%s", line);
+    while (fgets(line, LINE_LENGTH, file) != NULL) {
+        size_t len = strlen(line);
+        if (line[len - 1] == '\n') line[len - 1] = 0;
+        DEBUG_PRINT("Processing line: %s\n", line);
+        char *tk = strtok(line, " \n");
+        if (tk != NULL) {
+            if (tk[strlen(tk) - 1] == ':') {
+                DEBUG_PRINT("Identified as label-line\n");
+            } else {
+                DEBUG_PRINT("Identified as instruction-line\n");
+            }
+        } else DEBUG_PRINT ("Ignored empty line\n");
+        DEBUG_PRINT("\n");
     }
 
     fclose(file);
