@@ -1,6 +1,12 @@
 #include<stdio.h>
 #include<string.h>
 
+#ifdef DEBUG
+#define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
 typedef struct Inst {
     struct Inst *next;
     char op;
@@ -46,7 +52,7 @@ int main(int argc, char const *argv[])
     char line[256];
 
     while (fgets(line, 256, file) != NULL) {
-        printf("%s", line);
+        DEBUG_PRINT("%s", line);
     }
 
     fclose(file);
