@@ -13,7 +13,9 @@
 
 typedef struct Inst {
     int8_t line;
+    int8_t adress;
     char *op;
+    char op_code;
     char *arg;
     struct Inst *next;
 } Inst;
@@ -25,14 +27,35 @@ typedef struct Label {
     struct Label *next;
 } Label;
 
+// decodes an operation-specifier in string form into it's opcode. 
+int8_t op_code_of(char* str) {
+    if (strcmp(str, "LDA") == 0) {
+        return 0;
+    } else if (strcmp(str, "STV") == 0) {
+        return 1;
+    } else if (strcmp(str, "ADD") == 0) {
+        return 2;
+    } else if (strcmp(str, "NAND") == 0) {
+        return 3;
+    } else if (strcmp(str, "JMP") == 0) {
+        return 4;
+    } else if (strcmp(str, "JMN") == 0) {
+        return 5;
+    } else if (strcmp(str, "NOT") == 0) {
+        return 6;
+    } else if (strcmp(str, "HLT") == 0) {
+        return 7;
+    } else return -1;
+}
+
 int main(int argc, char const *argv[])
 {
     // Check for correct number of arguments.
     if (argc == 1) {
-        printf("No argument provided.\n");
+        printf("ERROR: No argument provided.\n");
         return 1;
     } else if (argc > 2){
-        printf("To0 many arguments provided.\n");
+        printf("ERROR: Too many arguments provided.\n");
         return 1;
     }
 
@@ -42,14 +65,14 @@ int main(int argc, char const *argv[])
     while (*(p++) != 0);
     p -= 5;
     if(strcmp(p, ".ul8") != 0) {
-        printf("Provided file needs to end with the .ul8 extension.\n");
+        printf("ERROR: Provided file needs to end with the .ul8 extension.\n");
         return 1;
     }
 
     //Open file
     FILE *file = fopen(path, "r");
     if (file == NULL) {
-        printf("File at %s cannot be opened.\n", path);
+        printf("ERROR: File at %s cannot be opened.\n", path);
         return 1;
     }
 
@@ -111,26 +134,53 @@ int main(int argc, char const *argv[])
 
     // perform checks for mandatory labels (.data as first and .start as second
     if (lh == NULL) {
-        printf("Did not find any labels. Labels '.data' and '.start' are mandatory.\n");
+        printf("ERROR: Did not find any labels. Labels '.data' and '.start' are mandatory.\n");
         return 1;
     }
 
     if (strcmp(lh->name, ".data:")) {
-        printf("Missing '.data'-label as first label. Found %s\n", lh->name);
+        printf("ERROR: Missing '.data'-label as first label. Found %s\n", lh->name);
         return 1;
     }
 
     if (lh->next == NULL) {
-        printf("Did not find second label. '.start' as second label is mandatory.\n");
+        printf("ERROR: Did not find second label. '.start' as second label is mandatory.\n");
         return 1;
     }
 
     if (strcmp(lh->next->name, ".start:")) {
-        printf("Missing '.start'-label as second label. Found %s\n", lh->next->name);
+        printf("ERROR: Missing '.start'-label as second label. Found %s\n", lh->next->name);
         return 1;
     }
 
     DEBUG_PRINT("Found '.data' and '.start' at expected positions.\n");
+
+    // Map memory-adresses and op-codes to instructions
+    Inst *code_start = lh->next->inst;
+    int8_t adress = 0;
+    while (code_start != NULL) {
+        code_start->adress = adress;
+        code_start->op_code = op_code_of(code_start->op);
+        if (code_start->op_code < 0) {
+            printf("ERROR: Operation '%s' at line %d could not be identified.", code_start->op, code_start->line);
+            return 1;
+        }
+        code_start = code_start->next;
+        adress++;
+    }
+    Inst *data_start =lh->inst;
+    while (data_start != lh->next->inst) {
+        data_start->adress = adress;
+        data_start = data_start->next;
+        adress++;
+    }
+
+    if (adress >= 32) {
+        printf("%d bytes are needed to store this program, UL8 offeres a maximum of 32 bytes of memory.\n", adress);
+        return 1;
+    }
+
+    DEBUG_PRINT("Finished successfully.\n");
 
     return 0;
 }
