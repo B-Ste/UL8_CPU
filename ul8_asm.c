@@ -28,24 +28,24 @@ typedef struct Label {
 } Label;
 
 // decodes an operation-specifier in string form into it's opcode. 
-int8_t op_code_of(char* str) {
+char op_code_of(char* str) {
     if (strcmp(str, "LDA") == 0) {
-        return 0;
+        return 0b00000000;
     } else if (strcmp(str, "STV") == 0) {
-        return 1;
+        return 0b00100000;
     } else if (strcmp(str, "ADD") == 0) {
-        return 2;
+        return 0b01000000;
     } else if (strcmp(str, "NAND") == 0) {
-        return 3;
+        return 0b01100000;
     } else if (strcmp(str, "JMP") == 0) {
-        return 4;
+        return 0b10000000;
     } else if (strcmp(str, "JMN") == 0) {
-        return 5;
+        return 0b10100000;
     } else if (strcmp(str, "NOT") == 0) {
-        return 6;
+        return 0b11000000;
     } else if (strcmp(str, "HLT") == 0) {
-        return 7;
-    } else return -1;
+        return 0b11100000;
+    } else return 0b00000001;
 }
 
 int main(int argc, char const *argv[])
@@ -161,8 +161,8 @@ int main(int argc, char const *argv[])
     while (code_start != NULL) {
         code_start->adress = adress;
         code_start->op_code = op_code_of(code_start->op);
-        if (code_start->op_code < 0) {
-            printf("ERROR: Operation '%s' at line %d could not be identified.", code_start->op, code_start->line);
+        if (code_start->op_code == 1) {
+            printf("ERROR: Operation '%s' at line %d could not be identified.\n", code_start->op, code_start->line);
             return 1;
         }
         code_start = code_start->next;
