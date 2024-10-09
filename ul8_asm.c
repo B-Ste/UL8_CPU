@@ -95,7 +95,9 @@ int main(int argc, char const *argv[])
             if (tk[strlen(tk) - 1] == ':') {
                 DEBUG_PRINT("Identified as label-line\n");
                 Label *l = malloc(sizeof(Label));
-                l->name = malloc(strlen(tk));
+                size_t tk_len = strlen(tk);
+                tk[tk_len - 1] = 0;
+                l->name = malloc(tk_len - 1);
                 strcpy(l->name, tk);
                 l->line = line_nr;
                 if (lh == NULL) {
@@ -138,7 +140,7 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    if (strcmp(lh->name, ".data:")) {
+    if (strcmp(lh->name, ".data")) {
         printf("ERROR: Missing '.data'-label as first label. Found %s\n", lh->name);
         return 1;
     }
@@ -148,7 +150,7 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    if (strcmp(lh->next->name, ".start:")) {
+    if (strcmp(lh->next->name, ".start")) {
         printf("ERROR: Missing '.start'-label as second label. Found %s\n", lh->next->name);
         return 1;
     }
@@ -156,28 +158,69 @@ int main(int argc, char const *argv[])
     DEBUG_PRINT("Found '.data' and '.start' at expected positions.\n");
 
     // Map memory-adresses and op-codes to instructions
-    Inst *code_start = lh->next->inst;
+    Inst *code = lh->next->inst;
     int8_t adress = 0;
-    while (code_start != NULL) {
-        code_start->adress = adress;
-        code_start->op_code = op_code_of(code_start->op);
-        if (code_start->op_code == 1) {
-            printf("ERROR: Operation '%s' at line %d could not be identified.\n", code_start->op, code_start->line);
+    while (code != NULL) {
+        code->adress = adress;
+        code->op_code = op_code_of(code->op);
+        if (code->op_code == 1) {
+            printf("ERROR: Operation '%s' at line %d could not be identified.\n", code->op, code->line);
             return 1;
         }
-        code_start = code_start->next;
+        code = code->next;
         adress++;
     }
-    Inst *data_start =lh->inst;
-    while (data_start != lh->next->inst) {
-        data_start->adress = adress;
-        data_start = data_start->next;
+    Inst *data =lh->inst;
+    while (data != lh->next->inst) {
+        data->adress = adress;
+        data = data->next;
         adress++;
     }
 
     if (adress >= 32) {
         printf("%d bytes are needed to store this program, UL8 offeres a maximum of 32 bytes of memory.\n", adress);
         return 1;
+    }
+
+    DEBUG_PRINT("Finished adress- and op-code-assignment.\n");
+
+    // Deode data-names
+    code = lh->next->inst;
+    data =lh->inst;
+    Label *label = lh;
+    while (code != NULL) {
+        int8_t found = 0;
+        if (code->arg != NULL) {
+            if ((u_int8_t) code->op_code < 128) {
+                // search for symbols in data-section
+                while(data != lh->next->inst) {
+                    if (!strcmp(code->arg, data->op)) {
+                        code->op_code = (code->op_code | data->adress);
+                        found = 1;
+                        break;
+                    }
+                    data = data->next;
+                }
+            } else {
+                // search for symbols in labels
+                while (label != NULL) {
+                    if (!strcmp(code->arg, label->name)) {
+                        code->op_code = (code->op_code | label->inst->adress);
+                        found = 1;
+                        break;
+                    }
+                    label = label->next;
+                }
+            }
+            if (!found) {
+                printf("Could not find symbol '%s' in line %d.\n", code->arg, code->line);
+                return 1;
+            }
+            found = 0;
+        }
+        data = lh->inst;
+        code = code->next;
+        label = lh;
     }
 
     DEBUG_PRINT("Finished successfully.\n");
