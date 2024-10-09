@@ -45,7 +45,16 @@ char op_code_of(char* str) {
         return 0b11000000;
     } else if (strcmp(str, "HLT") == 0) {
         return 0b11100000;
-    } else return 0b00000001;
+    } else exit(1);
+}
+
+char *string_of_op(char op) {
+    char *str = malloc(10);
+    if (!str) exit(1);
+    for (int i = 0; i < 8; i++) str[i] = (op & (128 >> i)) ? '1' : '0';
+    str[8] = '\n';
+    str[9] = 0;
+    return str;
 }
 
 int main(int argc, char const *argv[])
@@ -170,9 +179,10 @@ int main(int argc, char const *argv[])
         code = code->next;
         adress++;
     }
-    Inst *data =lh->inst;
+    Inst *data = ih;
     while (data != lh->next->inst) {
         data->adress = adress;
+        data->op_code = atoi(data->arg);
         data = data->next;
         adress++;
     }
@@ -186,7 +196,7 @@ int main(int argc, char const *argv[])
 
     // Deode data-names
     code = lh->next->inst;
-    data =lh->inst;
+    data =ih;
     Label *label = lh;
     while (code != NULL) {
         int8_t found = 0;
@@ -221,6 +231,19 @@ int main(int argc, char const *argv[])
         data = lh->inst;
         code = code->next;
         label = lh;
+    }
+
+    char *op_strings[32];
+    char *zero = "00000000\n";
+    memset_pattern8(op_strings, &zero, 32 * 8);
+    code = ih;
+    while (code != NULL) {
+        op_strings[code->adress] = string_of_op(code->op_code);
+        code = code->next;
+    }
+
+    for (int i = 0; i < 32; i++) {
+        DEBUG_PRINT("%s", op_strings[i]);
     }
 
     DEBUG_PRINT("Finished successfully.\n");
