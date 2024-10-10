@@ -11,15 +11,23 @@
 #define LINE_LENGTH 256
 #define TOKEN_DELIMETER (" \n")
 
+// Holds one Instruction complete with it's operation and argument.
+// line holds line of instruction in UL8-ASM file for debugging purposes.
+// adress holds adress of instruction in memory.
+// op_code holds bit-format of instruction in UL8-ISA.
+// next points to the instruction immediately following.
 typedef struct Inst {
     int8_t line;
     int8_t adress;
     char *op;
-    char op_code;
     char *arg;
+    char op_code;
     struct Inst *next;
 } Inst;
 
+// Holds one Label with it's name.
+// inst points to the first instruction of the label's code-block.
+// next points to the label immediately following.
 typedef struct Label {
     int8_t line;
     char *name;
@@ -27,7 +35,7 @@ typedef struct Label {
     struct Label *next;
 } Label;
 
-// decodes an operation-specifier in string form into it's opcode. 
+// decodes an operation in string form into it's opcode. 
 char op_code_of(char* str) {
     if (strcmp(str, "LDA") == 0) {
         return 0b00000000;
@@ -48,6 +56,7 @@ char op_code_of(char* str) {
     } else exit(1);
 }
 
+// Decodes an UL8-opcode into it's string-format (1s and 0s as text characters) with newline at the end.
 char *string_of_op(char op) {
     char *str = malloc(10);
     if (!str) exit(1);
@@ -102,6 +111,7 @@ int main(int argc, char const *argv[])
         char *tk = strtok(line, TOKEN_DELIMETER);
         if (tk != NULL) {
             if (tk[strlen(tk) - 1] == ':') {
+                // Decode line with label into datastructure
                 DEBUG_PRINT("Identified as label-line\n");
                 Label *l = malloc(sizeof(Label));
                 size_t tk_len = strlen(tk);
@@ -117,6 +127,7 @@ int main(int argc, char const *argv[])
                     lt = l;
                 }
             } else {
+                // Decode line with instruction into datastructure
                 DEBUG_PRINT("Identified as instruction-line\n");
                 Inst *i = malloc(sizeof(Inst));
                 i->op = malloc(strlen(tk));
@@ -143,7 +154,8 @@ int main(int argc, char const *argv[])
 
     fclose(file);
 
-    // perform checks for mandatory labels (.data as first and .start as second
+    // perform checks for mandatory labels (.data as first and .start as second)
+    // This also guarantees the safety of memory-accesses in the following
     if (lh == NULL) {
         printf("ERROR: Did not find any labels. Labels '.data' and '.start' are mandatory.\n");
         return 1;
@@ -166,7 +178,7 @@ int main(int argc, char const *argv[])
 
     DEBUG_PRINT("Found '.data' and '.start' at expected positions.\n");
 
-    // Map memory-adresses and op-codes to instructions
+    // Create memory-adresses and instruction-op-codes for instructions
     Inst *code = lh->next->inst;
     int8_t adress = 0;
     while (code != NULL) {
@@ -179,6 +191,9 @@ int main(int argc, char const *argv[])
         code = code->next;
         adress++;
     }
+
+    // Create memory-adresses for data directly behind memory
+    // Decode value of data 
     Inst *data = ih;
     while (data != lh->next->inst) {
         data->adress = adress;
@@ -187,6 +202,7 @@ int main(int argc, char const *argv[])
         adress++;
     }
 
+    // Cheack for memory size
     if (adress >= 32) {
         printf("%d bytes are needed to store this program, UL8 offeres a maximum of 32 bytes of memory.\n", adress);
         return 1;
@@ -201,6 +217,7 @@ int main(int argc, char const *argv[])
     while (code != NULL) {
         int8_t found = 0;
         if (code->arg != NULL) {
+            // Check, whether instructions have data (op_code < 128) or labels (op_code >= 128) as argument
             if ((u_int8_t) code->op_code < 128) {
                 // search for symbols in data-section
                 while(data != lh->next->inst) {
@@ -233,6 +250,7 @@ int main(int argc, char const *argv[])
         label = lh;
     }
 
+    // Create array, that holds the string-representation of the op_codes
     char *op_strings[32];
     char *zero = "00000000\n";
     memset_pattern8(op_strings, &zero, 32 * 8);
@@ -246,6 +264,7 @@ int main(int argc, char const *argv[])
         DEBUG_PRINT("%s", op_strings[i]);
     }
 
+    // Create output-file and write string-representations of code to it
     FILE *out = fopen("out", "w");
     if (!out) {
         printf("Could not open/create output-file.\n");
@@ -259,6 +278,7 @@ int main(int argc, char const *argv[])
 
     fclose(out);
 
+    // free allocated memory
     Label *label_inter;
     while (lh != NULL) {
         label_inter = lh->next;
