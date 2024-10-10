@@ -246,6 +246,19 @@ int main(int argc, char const *argv[])
         DEBUG_PRINT("%s", op_strings[i]);
     }
 
+    FILE *out = fopen("out", "w");
+    if (!out) {
+        printf("Could not open/create output-file.\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < 32; i++) {
+        fprintf(out, "%s", op_strings[i]);
+        if (op_strings[i] != zero) free(op_strings[i]);
+    }
+
+    fclose(out);
+
     DEBUG_PRINT("Finished successfully.\n");
 
     return 0;
