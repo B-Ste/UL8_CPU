@@ -259,6 +259,23 @@ int main(int argc, char const *argv[])
 
     fclose(out);
 
+    Label *label_inter;
+    while (lh != NULL) {
+        label_inter = lh->next;
+        free(lh->name);
+        free(lh);
+        lh = label_inter;
+    }
+
+    Inst *inst_inter;
+    while(ih != NULL) {
+        inst_inter = ih->next;
+        free(ih->op);
+        if (ih->arg) free(ih->arg);
+        free(ih);
+        ih = inst_inter;
+    }
+
     DEBUG_PRINT("Finished successfully.\n");
 
     return 0;
