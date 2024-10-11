@@ -1,6 +1,6 @@
 CC := gcc
-BIN := ul8_asm
-FILE := ul8_asm.c
+BIN := asm/ul8_asm
+FILE := asm/ul8_asm.c
 
 all: $(BIN)
 
