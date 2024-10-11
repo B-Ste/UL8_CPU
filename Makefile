@@ -1,5 +1,14 @@
-default:
-	gcc ul8_asm.c -o ul8_asm -D DEBUG
+CC := gcc
+BIN := ul8_asm
+FILE := ul8_asm.c
 
-release:
-	gcc ul8_asm.c -o ul8_asm
+all: $(BIN)
+
+$(BIN): $(FILE)
+	$(CC) $^ -o $@ -D DEBUG
+
+release: $(FILE) 
+	$(CC) $^ -o $(BIN)
+
+clean:
+	rm -rf $(BIN)
